@@ -45,7 +45,8 @@ namespace back.Controllers
             User user = new User
             {
                 Username = request.Username,
-                Firstname = request.Firstname
+                Firstname = request.Firstname,
+                Email = request.Email,
             };
             user.Password = hasher.HashPassword(user, request.Password);
 
@@ -67,6 +68,7 @@ namespace back.Controllers
         public required string Username { get; set; }
         public required string Password { get; set; }
         public required string Firstname { get; set; }
+        public required string Email { get; set; }
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using back.Models;
+﻿using back.Config;
+using back.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ namespace back.Controllers
         // Explanation: `ToListAsync` is an asynchronous method available for IQueryable, but `products` is a List<ProductResponse>, which does not support asynchronous operations. Use `ToList` instead.
 
         [HttpGet]
+
         public async Task<ActionResult<IEnumerable<ProductResponse>>> GetProducts()
         {
             if (_context.Products == null)
@@ -81,6 +83,7 @@ namespace back.Controllers
 
         // POST: api/products
         [HttpPost]
+        [AuthorizeAdminEmail]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<Product>> CreateProduct([FromForm] Product product, [FromForm] IFormFile? imageFile)
         {
@@ -111,6 +114,7 @@ namespace back.Controllers
 
         // PUT: api/products/5
         [HttpPut("{id}")]
+        [AuthorizeAdminEmail]
         public async Task<IActionResult> UpdateProduct(int id, Product product)
         {
             if (id != product.Id)
@@ -138,6 +142,7 @@ namespace back.Controllers
 
         // DELETE: api/products/5
         [HttpDelete("{id}")]
+        [AuthorizeAdminEmail]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);

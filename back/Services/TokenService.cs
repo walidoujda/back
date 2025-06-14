@@ -30,7 +30,8 @@ namespace back.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
-                new Claim("userId", user.Id.ToString())
+                new Claim("userId", user.Id.ToString()),
+                new Claim("email", user.Email)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

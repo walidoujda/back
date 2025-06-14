@@ -8,14 +8,14 @@ import { catchError, Observable, of, tap } from "rxjs";
 }) export class ProductsService {
 
     private readonly http = inject(HttpClient);
-    private readonly path = "/api/products";
+    private readonly apiUrl = 'http://localhost:5062/api/products'; // adapte le chemin si besoin
     
     private readonly _products = signal<Product[]>([]);
 
     public readonly products = this._products.asReadonly();
 
     public get(): Observable<Product[]> {
-        return this.http.get<Product[]>(this.path).pipe(
+        return this.http.get<Product[]>(this.apiUrl).pipe(
             catchError((error) => {
                 return this.http.get<Product[]>("assets/products.json");
             }),
@@ -24,7 +24,7 @@ import { catchError, Observable, of, tap } from "rxjs";
     }
 
     public create(product: Product): Observable<boolean> {
-        return this.http.post<boolean>(this.path, product).pipe(
+        return this.http.post<boolean>(this.apiUrl, product).pipe(
             catchError(() => {
                 return of(true);
             }),
@@ -33,7 +33,7 @@ import { catchError, Observable, of, tap } from "rxjs";
     }
 
     public update(product: Product): Observable<boolean> {
-        return this.http.patch<boolean>(`${this.path}/${product.id}`, product).pipe(
+        return this.http.patch<boolean>(`${this.apiUrl}/${product.id}`, product).pipe(
             catchError(() => {
                 return of(true);
             }),
@@ -44,7 +44,7 @@ import { catchError, Observable, of, tap } from "rxjs";
     }
 
     public delete(productId: number): Observable<boolean> {
-        return this.http.delete<boolean>(`${this.path}/${productId}`).pipe(
+        return this.http.delete<boolean>(`${this.apiUrl}/${productId}`).pipe(
             catchError(() => {
                 return of(true);
             }),
