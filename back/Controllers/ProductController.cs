@@ -1,9 +1,11 @@
 ﻿using back.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace back.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/products")]
     public class ProductController : ControllerBase
@@ -35,8 +37,8 @@ namespace back.Controllers
                     Description = product.Description,
                     Image = product.Image,
                     Price = product.Price,
-                    Quantity = product.Quantity,
-                    inventoryStatus = product.Quantity > 0 ? product.Quantity < 5 ? "LOWSTOCK" : "INSTOCK" : "OUTOFSTOCK",
+                    Quantity = product.Quantity - CartStore.GetReservedQuantity(product.Id),
+                    inventoryStatus = product.Quantity - CartStore.GetReservedQuantity(product.Id) > 0 ? product.Quantity < 5 ? "LOWSTOCK" : "INSTOCK" : "OUTOFSTOCK",
                     InternalReference = product.InternalReference,
                     ShellId = product.ShellId,
                     Rating = product.Rating,
@@ -46,15 +48,18 @@ namespace back.Controllers
                 products.Add(productResponse);
             }
 
-            return Ok(products); 
+            return Ok(products); // Changed return type to ActionResult<IEnumerable<ProductResponse>> and used Ok() to wrap the response.
         }
 
         // GET: api/products/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ProductResponse>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            ProductResponse productRespons = new ProductResponse
+            if (product == null)
+                return NotFound();
+
+            ProductResponse productResponse = new ProductResponse
             {
                 Id = product.Id,
                 Code = product.Code,
@@ -63,7 +68,7 @@ namespace back.Controllers
                 Image = product.Image,
                 Price = product.Price,
                 Quantity = product.Quantity,
-                inventoryStatus = product.Quantity > 0 ? product.Quantity < 5 ? "LOWSTOCK":"INSTOCK" : "OUTOFSTOCK",
+                inventoryStatus = product.Quantity > 0 ? product.Quantity < 5 ? "LOWSTOCK" : "INSTOCK" : "OUTOFSTOCK",
                 InternalReference = product.InternalReference,
                 ShellId = product.ShellId,
                 Rating = product.Rating,
@@ -71,10 +76,7 @@ namespace back.Controllers
                 UpdatedAt = product.UpdatedAt
             };
 
-            if (product == null)
-                return NotFound();
-
-            return product;
+            return Ok(productResponse);
         }
 
         // POST: api/products

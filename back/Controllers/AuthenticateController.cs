@@ -25,11 +25,11 @@ namespace back.Controllers
         public IActionResult Login([FromBody] LoginRequest request)
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == request.Username);
-            if (user == null)
+            if (user == null || string.IsNullOrEmpty(user.Password))
                 return Unauthorized("Identifiants invalides.");
 
             var hasher = new PasswordHasher<User>();
-            var result = hasher.VerifyHashedPassword(user, user.Password, request.Password);
+            PasswordVerificationResult result = hasher.VerifyHashedPassword(user, hashedPassword: user.Password, request.Password);
             if (result == PasswordVerificationResult.Failed)
                 return Unauthorized("Identifiants invalides.");
 
@@ -54,20 +54,19 @@ namespace back.Controllers
 
             return Ok("OK");
         }
-
     }
 
     public class LoginRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public required string Username { get; set; }
+        public required string Password { get; set; }
     }
 
     public class RegisterRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Firstname { get; set; }
+        public required string Username { get; set; }
+        public required string Password { get; set; }
+        public required string Firstname { get; set; }
     }
 }
 

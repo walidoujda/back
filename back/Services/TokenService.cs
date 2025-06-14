@@ -19,28 +19,32 @@ namespace back.Services
 
         public string GenerateJwtToken(string username)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            throw new NotImplementedException();
+        }
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        public string GenerateToken(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
+                new Claim("userId", user.Id.ToString())
+            };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, username)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(2),
-                SigningCredentials = creds
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
-        }
-
-        internal object GenerateToken(User user)
-        {
-            throw new NotImplementedException();
         }
     }
 }
