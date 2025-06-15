@@ -125,10 +125,31 @@ namespace back.Controllers
                 }
             }
 
-            // Déduction du stock
+            // Création de la commande
+            var order = new Order
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now),
+                Status = 1, // À adapter selon ta logique (ex: 1 = "En attente")
+                UserId = userId
+            };
+            _context.Orders.Add(order);
+            _context.SaveChanges(); // Pour générer l'Id de la commande
+
+            // Ajout des Orderitems et déduction du stock
             foreach (var cartItem in items)
             {
                 var product = _context.Products.Find(cartItem.ProductId);
+
+                // Création de l'Orderitem
+                var orderItem = new Orderitem
+                {
+                    OrderId = order.Id,
+                    ProductId = cartItem.ProductId,
+                    Quantity = cartItem.Quantity
+                };
+                _context.Orderitems.Add(orderItem);
+
+                // Déduction du stock
                 product.Quantity -= cartItem.Quantity;
                 product.UpdatedAt = DateOnly.FromDateTime(DateTime.Now);
             }
@@ -138,7 +159,7 @@ namespace back.Controllers
             // Vide le panier après validation
             CartStore.Carts.Remove(userId);
 
-            return Ok("Panier validé et stock mis à jour.");
+            return Ok("Panier validé, commande créée et stock mis à jour.");
         }
     }
     public class CartItem

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace back.Models;
 
 public partial class Product
 {
-    [Key]
     public int Id { get; set; }
 
     public string? Code { get; set; }

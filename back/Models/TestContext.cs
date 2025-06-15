@@ -16,11 +16,16 @@ public partial class TestContext : DbContext
     {
     }
 
+    public virtual DbSet<Order> Orders { get; set; }
+
+    public virtual DbSet<Orderitem> Orderitems { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseMySql("server=localhost;user=root;database=test", Microsoft.EntityFrameworkCore.ServerVersion.Parse("9.1.0-mysql"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,15 +34,36 @@ public partial class TestContext : DbContext
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
 
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("order");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Date).HasColumnName("date");
+            entity.Property(e => e.Status).HasColumnName("status");
+        });
+
+        modelBuilder.Entity<Orderitem>(entity =>
+        {
+            entity.HasKey(e => new { e.ProductId, e.OrderId })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("orderitems");
+
+            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.OrderId).HasColumnName("orderId");
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("product");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Code)
                 .HasMaxLength(255)
                 .HasColumnName("code");
@@ -69,9 +95,10 @@ public partial class TestContext : DbContext
 
             entity.ToTable("users");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Email)
+                .HasMaxLength(256)
+                .HasColumnName("email");
             entity.Property(e => e.Firstname)
                 .HasMaxLength(255)
                 .HasColumnName("firstname");
