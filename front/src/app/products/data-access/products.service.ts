@@ -2,20 +2,23 @@ import { Injectable, inject, signal } from "@angular/core";
 import { Product } from "./product.model";
 import { HttpClient } from "@angular/common/http";
 import { catchError, Observable, of, tap } from "rxjs";
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: "root"
 }) export class ProductsService {
 
     private readonly http = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:5062/api/products'; // adapte le chemin si besoin
+    private readonly apiUrl = `${environment.apiUrl}/api/products`; // adapte le chemin si besoin
     
     private readonly _products = signal<Product[]>([]);
 
     public readonly products = this._products.asReadonly();
 
     public get(): Observable<Product[]> {
+        console.log(this.apiUrl);
         return this.http.get<Product[]>(this.apiUrl).pipe(
+
             catchError((error) => {
                 return this.http.get<Product[]>("assets/products.json");
             }),
@@ -50,5 +53,12 @@ import { catchError, Observable, of, tap } from "rxjs";
             }),
             tap(() => this._products.update(products => products.filter(product => product.id !== productId))),
         );
+    }
+
+    addToCart(productId: number, quantity: number) {
+        return this.http.post('http://localhost:5062/api/cart/add', {
+            productId,
+            quantity
+        });
     }
 }

@@ -12,7 +12,11 @@ namespace back.Controllers
     public class ProductController : ControllerBase
     {
         private readonly TestContext _context;
-
+        private string GetBaseUrl()
+        {
+            var request = HttpContext.Request;
+            return $"{request.Scheme}://{request.Host}";
+        }
         public ProductController(TestContext context)
         {
             _context = context;
@@ -25,6 +29,7 @@ namespace back.Controllers
 
         public async Task<ActionResult<IEnumerable<ProductResponse>>> GetProducts()
         {
+            var baseUrl = GetBaseUrl();
             if (_context.Products == null)
                 return NotFound("No products found.");
 
@@ -37,7 +42,7 @@ namespace back.Controllers
                     Code = product.Code,
                     Name = product.Name,
                     Description = product.Description,
-                    Image = product.Image,
+                    Image = string.IsNullOrEmpty(product.Image) ? null : $"{baseUrl}{product.Image}",
                     Price = product.Price,
                     Quantity = product.Quantity - CartStore.GetReservedQuantity(product.Id),
                     inventoryStatus = product.Quantity - CartStore.GetReservedQuantity(product.Id) > 0 ? product.Quantity < 5 ? "LOWSTOCK" : "INSTOCK" : "OUTOFSTOCK",

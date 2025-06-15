@@ -20,6 +20,7 @@ import { CommonModule } from '@angular/common';
     PanelMenuComponent
   ],
 })
+
 export class AppComponent {
   title = "ALTEN SHOP";
 }

@@ -59,7 +59,6 @@ namespace back.Controllers
             if (!CartStore.Carts.ContainsKey(userId))
                 CartStore.Carts[userId] = new List<CartItem>();
 
-            // Fix for CS8600: Ensure nullability is handled explicitly
             Product? product = _context.Products.Find(item.ProductId);
             if (product == null || (product.Quantity ?? 0) - CartStore.GetReservedQuantity(item.ProductId) - item.Quantity < 0)
             {
@@ -93,6 +92,53 @@ namespace back.Controllers
             var userId = int.Parse(userIdClaim.Value);
             CartStore.Carts.Remove(userId);
             return Ok();
+        }
+
+        [HttpPost("validate")]
+        public IActionResult ValidateCart()
+        {
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
+            {
+                return BadRequest("L'identifiant utilisateur est manquant ou invalide.");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            if (!CartStore.Carts.TryGetValue(userId, out var items) || items.Count == 0)
+            {
+                return BadRequest("Le panier est vide.");
+            }
+
+            // Vérification du stock pour chaque produit
+            foreach (var cartItem in items)
+            {
+                var product = _context.Products.Find(cartItem.ProductId);
+                if (product == null)
+                {
+                    return BadRequest($"Produit avec l'ID {cartItem.ProductId} introuvable.");
+                }
+
+                if ((product.Quantity ?? 0) < cartItem.Quantity)
+                {
+                    return BadRequest($"Stock insuffisant pour le produit {product.Name} (ID: {product.Id}). Stock disponible : {product.Quantity}, demandé : {cartItem.Quantity}");
+                }
+            }
+
+            // Déduction du stock
+            foreach (var cartItem in items)
+            {
+                var product = _context.Products.Find(cartItem.ProductId);
+                product.Quantity -= cartItem.Quantity;
+                product.UpdatedAt = DateOnly.FromDateTime(DateTime.Now);
+            }
+
+            _context.SaveChanges();
+
+            // Vide le panier après validation
+            CartStore.Carts.Remove(userId);
+
+            return Ok("Panier validé et stock mis à jour.");
         }
     }
     public class CartItem

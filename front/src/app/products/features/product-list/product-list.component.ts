@@ -1,12 +1,15 @@
 import { Component, OnInit, inject, signal } from "@angular/core";
-import { Product } from "app/products/data-access/product.model";
-import { ProductsService } from "app/products/data-access/products.service";
-import { ProductFormComponent } from "app/products/ui/product-form/product-form.component";
+import { Product } from "../../data-access/product.model";
+import { ProductsService } from "../../data-access/products.service";
+import { ProductFormComponent } from "../../ui/product-form/product-form.component";
 import { ButtonModule } from "primeng/button";
 import { CardModule } from "primeng/card";
 import { DataViewModule } from 'primeng/dataview';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
+import { AuthService } from "../../../auth/auth.service";
+import { LoginComponent } from "../../../auth/login.component";
+import { FormsModule } from "@angular/forms"; // Ajoute cette ligne
 
 const emptyProduct: Product = {
   id: 0,
@@ -30,19 +33,35 @@ const emptyProduct: Product = {
   templateUrl: "./product-list.component.html",
   styleUrls: ["./product-list.component.scss"],
   standalone: true,
-  imports: [CommonModule, DataViewModule, CardModule, ButtonModule, DialogModule, ProductFormComponent],
+  imports: [
+    CommonModule,
+    DataViewModule,
+    CardModule,
+    ButtonModule,
+    DialogModule,
+    ProductFormComponent,
+    LoginComponent,
+    FormsModule // Ajoute FormsModule ici
+  ],
 })
 export class ProductListComponent implements OnInit {
   private readonly productsService = inject(ProductsService);
+  private readonly authService = inject(AuthService);
 
   public readonly products = this.productsService.products;
-
   public isDialogVisible = false;
   public isCreation = false;
   public readonly editedProduct = signal<Product>(emptyProduct);
 
+  public readonly isLoggedIn = this.authService.isLoggedIn;
+  public readonly userEmail = this.authService.email;
+
+  public quantities: { [productId: number]: number } = {};
+
   ngOnInit() {
-    this.productsService.get().subscribe();
+    if (this.isLoggedIn()) {
+      this.productsService.get().subscribe();
+    }
   }
 
   public onCreate() {
@@ -76,5 +95,13 @@ export class ProductListComponent implements OnInit {
 
   private closeDialog() {
     this.isDialogVisible = false;
+  }
+
+  public addToCart(productId: number) {
+    const quantity = this.quantities[productId] || 1;
+    this.productsService.addToCart(productId, quantity).subscribe({
+      next: () => alert('Produit ajouté au panier !'),
+      error: () => alert('Erreur lors de l\'ajout au panier')
+    });
   }
 }
