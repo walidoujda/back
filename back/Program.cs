@@ -1,3 +1,4 @@
+// Le reste du code reste inchangé  
 using back.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -7,29 +8,14 @@ using back.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAngularApp", policy =>
-    {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // Si tu utilises l'authentification avec cookies ou headers
-    });
-});
-// Charger les paramètres JWT depuis appsettings.json
-var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
-builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
-var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
-{
-    throw new InvalidOperationException("La clé secrète JWT est manquante ou invalide.");
-}
-
+// Add services to the container.  
+// Charger les paramètres JWT depuis appsettings  
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 
-// Ajouter l'authentification JWT
+// Ajouter l'authentification JWT  
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -45,14 +31,12 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
-
-// Ajouter les services à l'application
 builder.Services.AddControllers();
 builder.Services.AddScoped<TokenService>();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle  
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configuration de la base de données
 builder.Services.AddDbContext<TestContext>(options =>
 {
     options.UseMySql(
@@ -63,7 +47,7 @@ builder.Services.AddDbContext<TestContext>(options =>
 
 var app = builder.Build();
 
-// Pipeline HTTP
+// Configure the HTTP request pipeline.  
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -71,8 +55,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
 app.UseAuthorization();

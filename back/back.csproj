@@ -20,7 +20,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="images\" />
+    <Folder Include="Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Controllers\AuthenticateController.cs" />
+    <None Include="Controllers\CartController.cs" />
+    <None Include="Controllers\HomeController.cs" />
+    <None Include="Controllers\ProductController.cs" />
+    <None Include="Services\TokenService.cs" />
   </ItemGroup>
 
 </Project>

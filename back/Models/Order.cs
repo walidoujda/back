@@ -10,4 +10,6 @@ public partial class Order
     public DateOnly Date { get; set; }
 
     public int Status { get; set; }
+
+    public int UserId { get; set; }
 }
