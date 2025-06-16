@@ -120,10 +120,23 @@ namespace back.Controllers
         // PUT: api/products/5
         [HttpPut("{id}")]
         [AuthorizeAdminEmail]
-        public async Task<IActionResult> UpdateProduct(int id, Product product)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] Product product, [FromForm] IFormFile? imageFile)
         {
             if (id != product.Id)
                 return BadRequest();
+            var imagesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+            if (!Directory.Exists(imagesPath))
+                Directory.CreateDirectory(imagesPath);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(imageFile.FileName)}";
+            var filePath = Path.Combine(imagesPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
 
             var existingProduct = await _context.Products.FindAsync(id);
             if (existingProduct == null)
@@ -137,7 +150,7 @@ namespace back.Controllers
             existingProduct.Rating = product.Rating;
             existingProduct.Code = product.Code;
             existingProduct.InternalReference = product.InternalReference;
-            existingProduct.Image = product.Image;
+            existingProduct.Image = $"/images/{fileName}";
             existingProduct.UpdatedAt = DateOnly.FromDateTime(DateTime.Now);
 
             await _context.SaveChangesAsync();
